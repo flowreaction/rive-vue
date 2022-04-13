@@ -7,7 +7,7 @@ import { Rive, StateMachineInput } from '@rive-app/webgl';
  * @param rive - Rive instance
  * @param stateMachineName - Name of the state machine
  * @param inputName - Name of the input
- * @returns
+ * @returns input - StateMachineInput
  */
 export default function useStateMachineInput(
   rive: Rive | null,

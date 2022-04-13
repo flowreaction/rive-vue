@@ -1,7 +1,7 @@
-import VRive from './components/VRive';
+import Rive from './components/Rive.vue';
 import useStateMachineInput from './components/useStateMachineInput';
 
-export default VRive;
+export default Rive;
 export { useStateMachineInput };
-export { UseRiveParameters, UseRiveOptions } from './types';
+export type { UseRiveParameters, UseRiveOptions } from './types';
 export * from '@rive-app/webgl';

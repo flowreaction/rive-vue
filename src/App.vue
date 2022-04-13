@@ -1,55 +1,61 @@
 <script setup lang="ts">
-import {
-  ref,
-  onMounted,
-  onBeforeUpdate,
-  watch,
-  computed,
-  watchEffect,
-  reactive,
-} from 'vue';
-import VRive from './components/VRive.vue';
+import { ref } from 'vue';
+import Rive from './components/Rive.vue';
 import useStateMachineInput from './components/useStateMachineInput';
 import { useWindowSize } from './utils';
+import { Layout, Fit, Alignment } from '@rive-app/webgl';
+import { StateMachineInput } from '@rive-app/webgl';
+// import { StateMachineInput } from '@rive-app/webgl';
 
-const canvas = ref();
-const size = useWindowSize();
-let agreeInput = null;
+let rive = null;
+let agreeInput: StateMachineInput | null = null;
+let disagreeInput: StateMachineInput | null = null;
+
+const riveComp = ref();
+
 const riveParams = {
   src: 'https://public.rive.app/community/runtime-files/2396-4820-animated-head.riv',
   autoplay: true,
   stateMachines: 'default',
-  //   animations: 'idlePreview',
-  //   layout: new Layout({
-  //     fit: Fit.Cover,
-  //     alignment: Alignment.TopCenter,
-  //   }),
-  //   onLoad: () => {
-  //     console.log('loaded and playing', canvas.value.rive);
-  //   },
+  layout: new Layout({
+    fit: Fit.Contain,
+    alignment: Alignment.Center,
+  }),
+};
+const riveOptions = {
+  //   defaults
+  //   useDevicePixelRatio: true,
+  //   fitCanvasToArtboardHeight: false,
+  //   useOffscreenRenderer: true,
 };
 
-watch(canvas, () => {
-  console.log('canvas changed', canvas.value.RiveInstance);
-  agreeInput = useStateMachineInput(
-    canvas.value.RiveInstance,
-    'default',
-    'agree'
-  );
-});
+function isEmpty(obj: Object) {
+  return Object.keys(obj).length === 0;
+}
 
-const riveOptions = {
-  //   fitCanvasToArtboardHeight: true,
-  //   useOffscreenRenderer: true,
+const riveHandler = (riveInstance) => {
+  rive = riveInstance;
+  console.log('parent rive instance', rive);
+  agreeInput = useStateMachineInput(rive, 'default', 'agree');
+  disagreeInput = useStateMachineInput(rive, 'default', 'disagree');
+};
+
+const clickHandler = () => {
+  console.log('clickHandler');
+  if (disagreeInput) {
+    disagreeInput.fire();
+  }
 };
 </script>
 
 <template>
   <div id="parentcontainer">
     <h1>Rive Example</h1>
-    <VRive
+    <Rive
+      @click="clickHandler"
+      @rive-is-loaded="riveHandler"
       id="rive"
-      ref="canvas"
+      ref="riveComp"
       :rive-params="riveParams"
       :rive-options="riveOptions"
     />

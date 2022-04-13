@@ -1,5 +1,4 @@
-import { onUnmounted, onMounted, ref } from 'vue';
-// import { Dimensions } from './types';
+import { onUnmounted, onMounted, ref, Ref } from 'vue';
 
 export function useWindowSize() {
   const width = ref(0);

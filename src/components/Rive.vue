@@ -5,7 +5,6 @@ import { UseRiveParameters, UseRiveOptions, Dimensions } from '../types';
 import { useWindowSize } from '../utils';
 import { computed } from '@vue/reactivity';
 
-let riveNoRef = {};
 /**
  * Props definition
  *
@@ -16,8 +15,12 @@ const props = defineProps<{
 }>();
 
 /**
+ * Emit defintions
+ */
+const emit = defineEmits(['riveIsLoaded']);
+
+/**
  * Template Refs
- *
  */
 const canvas = ref<HTMLCanvasElement | null>(null);
 const container = ref<HTMLElement | null>(null);
@@ -25,8 +28,11 @@ const container = ref<HTMLElement | null>(null);
 /**
  * Reactive variables
  */
-const { width, height } = useWindowSize();
-let RiveInstance: Rive | null = {} as Rive;
+const { width: wWidth, height: wHeight } = useWindowSize();
+const riveIsLoaded = ref(false);
+
+let RiveInstance: Rive | null = null;
+
 // const rive = ref<Rive | null>(null);
 const dimensions = ref<Dimensions>({
   width: 0,
@@ -59,17 +65,22 @@ const defaultOptions = {
 /**
  * Watches windowsize(height and width) and updates the canvas dimensions
  */
-watch([height, width], () => {
-  if (canvas.value && container.value) {
+watchEffect(() => {
+  if (canvas.value && container.value && wWidth.value && wHeight.value) {
     const { width, height } = getCanvasDimensions();
     const boundsChanged =
       width !== dimensions.value.width || height !== dimensions.value.height;
-    if (canvas.value && container.value && RiveInstance && boundsChanged) {
+    if (
+      canvas.value &&
+      container.value &&
+      riveIsLoaded.value &&
+      boundsChanged
+    ) {
       if (options.value.fitCanvasToArtboardHeight) {
         container.value.style.height = `${height}px`;
       }
       if (options.value.useDevicePixelRatio) {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = 2;
         canvas.value.width = dpr * width;
         canvas.value.height = dpr * height;
         canvas.value.style.width = width + 'px';
@@ -79,7 +90,7 @@ watch([height, width], () => {
         canvas.value.height = height;
       }
       dimensions.value = { width, height };
-      RiveInstance.startRendering();
+      RiveInstance?.startRendering();
     }
     if (RiveInstance) {
       RiveInstance.resizeToCanvas();
@@ -123,7 +134,6 @@ watch(animations, () => {
 function getCanvasDimensions() {
   const { width, height } =
     container.value?.getBoundingClientRect() ?? new DOMRect(0, 0, 0, 0);
-
   if (RiveInstance && options.value.fitCanvasToArtboardHeight) {
     const { maxY, maxX } = RiveInstance.bounds;
     return { width, height: width * (maxY / maxX) };
@@ -142,19 +152,23 @@ onMounted(() => {
       ...props.riveParams,
       canvas: canvas.value,
     });
-    r.on(EventType.Load, () => Object.assign(RiveInstance, r));
-    // rive.value = r;
+    r.on(EventType.Load, () => {
+      RiveInstance = r;
+      riveIsLoaded.value = true;
+      emit('riveIsLoaded', r);
+    });
   }
 });
 
 onUnmounted(() => {
-  RiveInstance?.stopRendering();
-  RiveInstance = null;
+  if (RiveInstance) {
+    RiveInstance.stopRendering();
+    Object.assign(RiveInstance, null);
+  }
 });
 
 defineExpose({
   RiveInstance,
-  //   canvas,
 });
 </script>
 
